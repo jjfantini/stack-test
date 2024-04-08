@@ -6,7 +6,7 @@ The scope of this minimal starter is to have a minimal codebase where NextJS Fro
 
 | Item                          | Tech    |
 | --------------------------------- | --------------------------------------|
-| Frontend                          | React/Next and Soft UI Dashboard PRO  |
+| Frontend                          | React/Next.js & NextUI                |
 | Authentication and Authorization  | Supabase                              | 
 | Backend                           | FastAPI                               | 
 | Data Validation                   | SQLModel (SQLAlchemy & Pydantic)      | 
