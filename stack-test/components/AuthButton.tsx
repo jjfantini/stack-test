@@ -1,30 +1,27 @@
-import { createClient } from "@/utils/supabase/server";
+"use client"
+import { deleteCookie } from 'cookies-next'
+import { useRouter } from 'next/navigation'
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-export default async function AuthButton() {
-  const supabase = createClient();
+type Props = {
+  loggedUser?: string
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function AuthButton(props: Props) {
+  const { loggedUser } = props
+  const router = useRouter()
 
-  const signOut = async () => {
-    "use server";
+  const logout = () => {
+    deleteCookie('token')
+    router.replace('/login')
+  }
 
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    return redirect("/login");
-  };
-
-  return user ? (
+  return loggedUser ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOut}>
-        <button className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover">
-          Logout
-        </button>
-      </form>
+      Hey, {loggedUser}!
+      <button onClick={logout} className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover">
+        Logout
+      </button>
     </div>
   ) : (
     <Link

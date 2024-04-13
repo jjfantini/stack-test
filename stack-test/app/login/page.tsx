@@ -1,54 +1,53 @@
+"use client"
 import Link from "next/link";
-import { headers } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
 import { SubmitButton } from "./submit-button";
-
+import { ChangeEvent, useState } from "react";
+import { login, register } from '@/utils/api'
+import { setCookie } from 'cookies-next'
+import { useRouter } from 'next/navigation'
 export default function Login({
   searchParams,
 }: {
   searchParams: { message: string };
 }) {
-  const signIn = async (formData: FormData) => {
-    "use server";
 
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const supabase = createClient();
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const handleInputChange = (setter: (v: string) => void) => {
+    return (e: ChangeEvent<HTMLInputElement>) => setter(e.target.value)
+  }
 
-    if (error) {
-      return redirect("/login?message=Could not authenticate user");
+  const signIn = async () => {
+    setLoading(true)
+    try {
+      const resp = await login(email, password)
+      setCookie('token', resp.access_token)
+      router.replace('/protected')
+    } catch (e: any) {
+      router.push('/login?message=failed ' + e?.response?.data?.detail )
+      // handle error
     }
 
-    return redirect("/protected");
+    setLoading(false)
+
   };
 
-  const signUp = async (formData: FormData) => {
-    "use server";
+  const signUp = async () => {
+    setLoading(true)
+    let message = ""
+    try {
+      await register(email, password)
+      message = "check your email and try re login"
 
-    const origin = headers().get("origin");
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      return redirect("/login?message=Could not authenticate user");
+    } catch (e: any) {
+      message = "faild: " + e?.response?.data?.detail
     }
 
-    return redirect("/login?message=Check email to continue sign in process");
+    router.push('/login?message=' +  message)
+    setLoading(false)
   };
 
   return (
@@ -74,7 +73,7 @@ export default function Login({
         Back
       </Link>
 
-      <form className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground">
+      <div className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground">
         <label className="text-md" htmlFor="email">
           Email
         </label>
@@ -82,6 +81,8 @@ export default function Login({
           className="rounded-md px-4 py-2 bg-inherit border mb-6"
           name="email"
           placeholder="you@example.com"
+          value={email}
+          onChange={handleInputChange(setEmail)}
           required
         />
         <label className="text-md" htmlFor="password">
@@ -92,17 +93,22 @@ export default function Login({
           type="password"
           name="password"
           placeholder="••••••••"
+          value={password}
+          onChange={handleInputChange(setPassword)}
           required
         />
         <SubmitButton
-          formAction={signIn}
+          onClick={signIn}
+          pending={loading}
           className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing In..."
+
         >
           Sign In
         </SubmitButton>
         <SubmitButton
-          formAction={signUp}
+          onClick={signUp}
+          pending={loading}
           className="border border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing Up..."
         >
@@ -113,7 +119,7 @@ export default function Login({
             {searchParams.message}
           </p>
         )}
-      </form>
+      </div>
     </div>
   );
 }
