@@ -16,10 +16,16 @@ SUPABASE_URL=your-project-url
 SUPABASE_KEY=your-anon-key
 ```
 
-run the backend 
+run the backend (linux)
 ```bash
 docker run -d --name fastapi --env-file ./.env -v $(pwd):/code -p 3001:80 fastapi
 ```
+
+run in windows
+```bash
+docker run -d --name fastapi --env-file ./.env -v %cd%:/code -p 3001:80 fastapi
+```
+
 
 the backend ready at (http://localhost:3001)
 now you can freely update the code and it auto reload
